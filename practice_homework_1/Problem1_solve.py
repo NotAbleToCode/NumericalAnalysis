@@ -27,9 +27,25 @@ def lagrange_interpolation(my_fun, point_x):
         return sum
     return lagrange_fun#返回插值得到的函数
 
+    
 #埃尔米特插值
-def hermite_interpolation():
-    pass
+def hermite_interpolation(my_fun, my_fun_der, point_x):
+    def hermite_fun(x):
+        function_value = 0
+        for base_x in point_x:
+            multi1 = 1
+            multi2 = 1
+            l_der = 0
+            for factor in point_x:
+                if factor != base_x:
+                    multi1 *= (x - factor)
+                    multi2 *= (base_x - factor)
+                    l_der += 1/(base_x - factor)
+            l_square = (multi1/multi2)**2
+            function_value += (my_fun(base_x)*(1 - 2*(x - base_x)*l_der)*l_square + my_fun_der(base_x)*(x - base_x)*l_square)
+        return function_value
+    return hermite_fun
+
 
 #分段线性插值，要求插值点间隔为1等距分布
 def piecewise_liner_interpolation(my_fun, point_x):
@@ -102,18 +118,25 @@ def three_diagonal_matrices_Gauss_solve(coe_mat, value_list):
     solve_list.reverse()
     return solve_list
 
+#生成区间[bottom, top]上n个切比雪夫多项式零点
+def Chebyshev_polynomials_zero_point(bottom, top, n):
+    zero_list = []
+    for i in range(n):
+        temp = math.cos((2*i+1)/(2*n)*math.pi)
+        zero_list.append((top - bottom) * (temp + 1) / 2 + bottom)
+    return zero_list
 
 #展示原函数和插值函数
-def display_fun(original_fun, inter_fun, bottom, top):
+def display_fun(original_fun, inter_fun, bottom, top, name):
     x = np.linspace(bottom, top, 1000)  #这个表示在bottom到top之间生成1000个x值
     y1 = [ original_fun(i) for i in x] 
     y2 = [ inter_fun(i) for i in x]  
-    plt.figure('Display Of Function Image: ' + inter_fun.__name__) #创建一个窗口
+    plt.figure('Display Of Function Image: ' + name) #创建一个窗口
     plt.subplot(1, 3, 1) #将该窗口分为一行三列，并定位到第一列
     plt.title('Original Function')
     plt.plot(x, y1) #当前定位绘制图像
     plt.subplot(1, 3, 2) #定位到第二列
-    plt.title(inter_fun.__name__)
+    plt.title(name)
     plt.plot(x, y2) #绘制图像
     plt.subplot(1, 3, 3)
     plt.title('Contrast Image')
@@ -136,20 +159,28 @@ def average_error(original_fun, inter_fun, bottom, top, number):
 if __name__ == '__main__':
     bottom = -5
     top = 5
-    number = 100
+    number = 100 #取number个等距点进行误差的均值计算
     point_x = [i for i in range(bottom, top + 1)]
     lagrange_fun = lagrange_interpolation(my_fun, point_x)
-    piecewise_liner_fun = piecewise_liner_interpolation(my_fun, point_x)
-    piecewise_hermite_fun = piecewise_hermite_interpolation(my_fun, my_fun_der, point_x)
-    three_spline_fun = three_spline_interpolation(my_fun, point_x, 0, 0)
-    display_fun(my_fun, lagrange_fun, bottom, top)
-    display_fun(my_fun, piecewise_liner_fun, bottom, top)
-    display_fun(my_fun, piecewise_hermite_fun, bottom, top)
-    display_fun(my_fun, three_spline_fun, bottom, top)
-    print('The mean error is as follows:')
-    print('Lagrange_fun:', average_error(my_fun, lagrange_fun, bottom, top, number))
-    print('piecewise_liner_fun:', average_error(my_fun, piecewise_liner_fun, bottom, top, number))
-    print('piecewise_hermite_fun:', average_error(my_fun, piecewise_hermite_fun, bottom, top, number))
-    print('three_spline_fun:', average_error(my_fun, three_spline_fun, bottom, top, number))
+    hermite_fun = hermite_interpolation(my_fun, my_fun_der, point_x)
+    #lagrange_fun_Chebyshev = lagrange_interpolation(my_fun, Chebyshev_polynomials_zero_point(bottom, top, top - bottom + 1))
+    #piecewise_liner_fun = piecewise_liner_interpolation(my_fun, point_x)
+    #piecewise_hermite_fun = piecewise_hermite_interpolation(my_fun, my_fun_der, point_x)
+    #three_spline_fun = three_spline_interpolation(my_fun, point_x, 1, 1)
+    display_fun(my_fun, lagrange_fun, bottom, top, 'lagrange_fun')
+    display_fun(my_fun, hermite_fun, bottom, top, 'hermite_fun')
+    #display_fun(my_fun, lagrange_fun_Chebyshev, bottom, top, 'lagrange_fun_Chebyshev')
+    #display_fun(my_fun, piecewise_liner_fun, bottom, top, 'piecewise_liner_fun')
+    #display_fun(my_fun, piecewise_hermite_fun, bottom, top, 'piecewise_hermite_fun')
+    #display_fun(my_fun, three_spline_fun, bottom, top, 'three_spline_fun')
+    #print('The mean error is as follows:')
+    print('lagrange_fun:', average_error(my_fun, lagrange_fun, bottom, top, number))
+    print('hermite_fun:', average_error(my_fun, hermite_fun, bottom, top, number))
+    #print('lagrange_fun_Chebyshev:', average_error(my_fun, lagrange_fun_Chebyshev, bottom, top, number))
+    #print('piecewise_liner_fun:', average_error(my_fun, piecewise_liner_fun, bottom, top, number))
+    #print('piecewise_hermite_fun:', average_error(my_fun, piecewise_hermite_fun, bottom, top, number))
+    #print('three_spline_fun:', average_error(my_fun, three_spline_fun, bottom, top, number))
     plt.show() #展示所有窗口
+    
+
     
